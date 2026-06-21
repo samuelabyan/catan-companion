@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Catan Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Overlays -->
+<div id="flashOverlay"></div>
+<div id="robberOverlay" class="" onclick="closeRobber()">
+  <div class="robber-emoji">🦹</div>
+  <div class="robber-title">The Robber Strikes!</div>
+  <div class="robber-sub">A 7 was rolled — move the robber<br><small style="opacity:.6">Tap anywhere to dismiss</small></div>
+</div>
+
+<!-- Settings -->
+<div class="settings-overlay" id="settingsOverlay"></div>
+<div class="settings-drawer" id="settingsDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <div class="drawer-title">Settings</div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-scroll">
+
+    <!-- Appearance -->
+    <div class="drawer-section">
+      <div class="dsec-label">Appearance</div>
+      <div class="setting-row">
+        <span>Dark mode</span>
+        <div class="toggle-pill" id="darkPill"></div>
+      </div>
+    </div>
+
+    <!-- Sound -->
+    <div class="drawer-section">
+      <div class="dsec-label">Sound</div>
+      <div class="setting-row">
+        <span>Sound enabled</span>
+        <div class="toggle-pill on" id="soundPill"></div>
+      </div>
+      <div id="soundOptions">
+        <div class="dsec-label" style="margin-top:10px;margin-bottom:6px;">Warning beep style <span style="font-weight:400;opacity:.6">(tap to preview)</span></div>
+        <div class="beep-options" id="shortBeepOpts">
+          <button class="beep-opt active" data-style="double-high">Double High</button>
+          <button class="beep-opt" data-style="single-ping">Single Ping</button>
+          <button class="beep-opt" data-style="triple-blip">Triple Blip</button>
+          <button class="beep-opt" data-style="descend">Descend</button>
+        </div>
+        <div class="dsec-label" style="margin-top:12px;margin-bottom:6px;">Time's-up beep style <span style="font-weight:400;opacity:.6">(tap to preview)</span></div>
+        <div class="beep-options" id="longBeepOpts">
+          <button class="beep-opt active" data-style="double-low">Double Low</button>
+          <button class="beep-opt" data-style="alarm">Alarm</button>
+          <button class="beep-opt" data-style="fanfare">Fanfare</button>
+          <button class="beep-opt" data-style="buzz">Buzz</button>
+        </div>
+        <div class="setting-row" style="margin-top:12px;">
+          <span>Warning beep at</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input class="s-input" type="number" id="warnSecsInput" min="3" max="59" value="10" style="width:54px;">
+            <span style="font-size:.82rem;color:var(--text3);">sec</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Turn Duration -->
+    <div class="drawer-section">
+      <div class="dsec-label">Turn Duration</div>
+      <div class="dur-presets" id="durationRow">
+        <button class="dur-preset" data-s="30">30s</button>
+        <button class="dur-preset active" data-s="60">1 min</button>
+        <button class="dur-preset" data-s="90">1:30</button>
+        <button class="dur-preset" data-s="120">2 min</button>
+        <button class="dur-preset" data-s="180">3 min</button>
+      </div>
+      <div class="custom-row">
+        <label>Custom</label>
+        <input class="s-input" type="number" id="customDurInput" min="5" max="3600" placeholder="sec">
+        <button class="s-btn" id="customDurSet">Set</button>
+      </div>
+    </div>
+
+    <!-- Players -->
+    <div class="drawer-section">
+      <div class="dsec-label">Player Tracker</div>
+      <div class="setting-row">
+        <span>Enable player tracker</span>
+        <div class="toggle-pill" id="playerPill"></div>
+      </div>
+      <div id="playerSetup" style="display:none;margin-top:10px;">
+        <div class="player-list" id="playerList"></div>
+        <button class="add-player-btn" id="addPlayerBtn">+ Add Player</button>
+      </div>
+    </div>
+
+    <!-- Roll Statistics -->
+    <div class="drawer-section">
+      <div class="dsec-label">Roll Statistics (this session)</div>
+      <div id="rollStats"></div>
+    </div>
+
+    <!-- Data -->
+    <div class="drawer-section">
+      <div class="dsec-label">Data</div>
+      <button class="danger-btn" id="clearDataBtn">🗑 Clear All Data &amp; Reset</button>
+    </div>
+
+  </div><!-- drawer-scroll -->
+</div><!-- settings-drawer -->
+
+<!-- Header -->
+<header>
+  <div class="logo">Catan <span>Companion</span></div>
+  <div class="header-center">
+    <div class="turn-badge" id="turnBadge" style="display:none">Turn 0</div>
+  </div>
+  <button class="header-btn" id="settingsBtn" aria-label="Settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+
+<!-- Player bar -->
+<div id="playerBar"></div>
+
+<!-- Main -->
+<div class="app-body">
+
+  <!-- DICE PANEL -->
+  <div class="panel">
+    <div class="panel-label">Dice Roll</div>
+    <div class="dice-row">
+      <div class="die" id="die1"><svg viewBox="0 0 60 60" id="dieSvg1"></svg></div>
+      <div class="dice-total-wrap">
+        <div class="dice-total" id="diceTotal">—</div>
+        <div class="dice-total-lbl">Total</div>
+      </div>
+      <div class="die" id="die2"><svg viewBox="0 0 60 60" id="dieSvg2"></svg></div>
+    </div>
+    <button class="roll-btn" id="rollBtn">🎲 Roll Dice</button>
+    <div class="history-row" id="historyRow">
+      <span style="font-size:.72rem;color:var(--text3);padding:4px 0">No rolls yet</span>
+    </div>
+  </div>
+
+  <!-- TIMER PANEL -->
+  <div class="panel">
+    <div class="panel-label">Turn Timer</div>
+    <div class="timer-ring-wrap">
+      <svg viewBox="0 0 160 160">
+        <circle class="ring-track" cx="80" cy="80" r="68"/>
+        <circle class="ring-progress" cx="80" cy="80" r="68" id="ringProgress"
+          stroke-dasharray="427.3" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-text">
+        <div class="timer-digits" id="timerDigits">1:00</div>
+        <div class="timer-sub" id="timerSub">ready</div>
+      </div>
+    </div>
+    <div class="timer-controls">
+      <button class="timer-btn btn-start" id="startPauseBtn">▶ Start</button>
+      <button class="timer-btn btn-reset" id="resetBtn" title="Reset">↺</button>
+    </div>
+  </div>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
